@@ -285,8 +285,12 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (RepositoryList, int64, err
 }
 
 // FindUserAccessibleRepoIDs find all accessible repositories' ID by user's id
-func FindUserAccessibleRepoIDs(userID int64) ([]int64, error) {
-	var accessCond builder.Cond = builder.Eq{"is_private": false}
+func FindUserAccessibleRepoIDs(userID int64, public bool) ([]int64, error) {
+	var accessCond = builder.NewCond()
+
+	if public {
+		accessCond = accessCond.And(builder.Eq{"is_private": false})
+	}
 
 	if userID > 0 {
 		accessCond = accessCond.Or(

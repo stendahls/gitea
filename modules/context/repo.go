@@ -225,11 +225,7 @@ func repoAssignment(ctx *Context, repo *models.Repository) {
 	if ctx.IsSigned && ctx.User.IsAdmin {
 		ctx.Repo.AccessMode = models.AccessModeOwner
 	} else {
-		var userID int64
-		if ctx.User != nil {
-			userID = ctx.User.ID
-		}
-		mode, err := models.AccessLevel(userID, repo)
+		mode, err := models.AccessLevel(ctx.User, repo)
 		if err != nil {
 			ctx.ServerError("AccessLevel", err)
 			return
