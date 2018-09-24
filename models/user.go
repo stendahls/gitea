@@ -113,6 +113,7 @@ type User struct {
 	// Permissions
 	IsActive                bool `xorm:"INDEX"` // Activate primary email
 	IsAdmin                 bool
+	IsRestricted            bool `xorm:"NOT NULL DEFAULT false"`
 	AllowGitHook            bool
 	AllowImportLocal        bool // Allow migrate repository by local path
 	AllowCreateOrganization bool `xorm:"DEFAULT true"`
