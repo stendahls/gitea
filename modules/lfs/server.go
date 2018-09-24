@@ -501,7 +501,7 @@ func authenticate(ctx *context.Context, repository *models.Repository, authoriza
 		return true
 	}
 	if ctx.IsSigned {
-		accessCheck, _ := models.HasAccess(ctx.User.ID, repository, accessMode)
+		accessCheck, _ := models.HasAccess(ctx.User, repository, accessMode)
 		return accessCheck
 	}
 
@@ -511,7 +511,7 @@ func authenticate(ctx *context.Context, repository *models.Repository, authoriza
 	}
 	ctx.User = user
 	if opStr == "basic" {
-		accessCheck, _ := models.HasAccess(ctx.User.ID, repository, accessMode)
+		accessCheck, _ := models.HasAccess(ctx.User, repository, accessMode)
 		return accessCheck
 	}
 	if repository.ID == repo.ID {

@@ -252,7 +252,7 @@ func runServ(c *cli.Context) error {
 					user.Name, repoPath)
 			}
 
-			mode, err := models.AccessLevel(user.ID, repo)
+			mode, err := models.AccessLevel(user, repo)
 			if err != nil {
 				fail("Internal error", "Failed to check access: %v", err)
 			} else if mode < requestedMode {

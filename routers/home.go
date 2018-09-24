@@ -64,6 +64,7 @@ func Home(ctx *context.Context) {
 type RepoSearchOptions struct {
 	OwnerID  int64
 	Private  bool
+	Public   bool
 	PageSize int
 	TplName  base.TplName
 }
@@ -131,7 +132,7 @@ func RenderRepoSearch(ctx *context.Context, opts *RepoSearchOptions) {
 		Private:   opts.Private,
 		Keyword:   keyword,
 		OwnerID:   opts.OwnerID,
-		AllPublic: true,
+		AllPublic: opts.Public,
 		TopicOnly: topicOnly,
 	})
 	if err != nil {
@@ -163,6 +164,7 @@ func ExploreRepos(ctx *context.Context) {
 		PageSize: setting.UI.ExplorePagingNum,
 		OwnerID:  ownerID,
 		Private:  ctx.User != nil,
+		Public:   !(ctx.User != nil && ctx.User.IsRestricted),
 		TplName:  tplExploreRepos,
 	})
 }
@@ -265,19 +267,21 @@ func ExploreCode(ctx *context.Context) {
 	}
 
 	var (
-		repoIDs []int64
-		err     error
-		isAdmin bool
-		userID  int64
+		repoIDs      []int64
+		err          error
+		isAdmin      bool
+		isRestricted bool
+		userID       int64
 	)
 	if ctx.User != nil {
 		userID = ctx.User.ID
 		isAdmin = ctx.User.IsAdmin
+		isRestricted = ctx.User.IsRestricted
 	}
 
 	// guest user or non-admin user
 	if ctx.User == nil || !isAdmin {
-		repoIDs, err = models.FindUserAccessibleRepoIDs(userID)
+		repoIDs, err = models.FindUserAccessibleRepoIDs(userID, !isRestricted)
 		if err != nil {
 			ctx.ServerError("SearchResults", err)
 			return

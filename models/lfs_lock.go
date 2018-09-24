@@ -139,7 +139,7 @@ func CheckLFSAccessForRepo(u *User, repo *Repository, mode AccessMode) error {
 	if u == nil {
 		return ErrLFSUnauthorizedAction{repo.ID, "undefined", mode}
 	}
-	has, err := HasAccess(u.ID, repo, mode)
+	has, err := HasAccess(u, repo, mode)
 	if err != nil {
 		return err
 	} else if !has {
