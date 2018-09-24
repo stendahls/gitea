@@ -38,6 +38,7 @@ type AdminEditUserForm struct {
 	MaxRepoCreation         int
 	Active                  bool
 	Admin                   bool
+	Restricted              bool
 	AllowGitHook            bool
 	AllowImportLocal        bool
 	AllowCreateOrganization bool

@@ -200,6 +200,8 @@ var migrations = []Migration{
 	NewMigration("add review", addReview),
 	// v73 -> v74
 	NewMigration("add must_change_password column for users table", addMustChangePassword),
+	// v74 -> v75
+	NewMigration("add is_restricted column for users table", addIsRestricted),
 }
 
 // Migrate database to current version
