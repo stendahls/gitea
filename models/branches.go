@@ -242,15 +242,16 @@ func updateUserWhitelist(repo *Repository, currentWhitelist, newWhitelist []int6
 	}
 
 	whitelist = make([]int64, 0, len(newWhitelist))
-	for _, userID := range newWhitelist {
-		has, err := hasAccess(x, userID, repo, AccessModeWrite)
+	newWhitelistUsers, err := GetUsersByIDs(newWhitelist)
+	for _, user := range newWhitelistUsers {
+		has, err := hasAccess(x, user, repo, AccessModeWrite)
 		if err != nil {
-			return nil, fmt.Errorf("HasAccess [user_id: %d, repo_id: %d]: %v", userID, repo.ID, err)
+			return nil, fmt.Errorf("HasAccess [user_id: %d, repo_id: %d]: %v", user.ID, repo.ID, err)
 		} else if !has {
 			continue // Drop invalid user ID
 		}
 
-		whitelist = append(whitelist, userID)
+		whitelist = append(whitelist, user.ID)
 	}
 
 	return

@@ -159,7 +159,7 @@ func (issue *Issue) changeAssignee(sess *xorm.Session, doer *User, assigneeID in
 		return fmt.Errorf("createAssigneeComment: %v", err)
 	}
 
-	mode, _ := accessLevel(sess, doer.ID, issue.Repo)
+	mode, _ := accessLevel(sess, doer, issue.Repo)
 	if issue.IsPull {
 		// if pull request is in the middle of creation - don't call webhook
 		if isCreate {

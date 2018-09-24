@@ -499,7 +499,7 @@ func (u *User) DeleteAvatar() error {
 
 // IsAdminOfRepo returns true if user has admin or higher access of repository.
 func (u *User) IsAdminOfRepo(repo *Repository) bool {
-	has, err := HasAccess(u.ID, repo, AccessModeAdmin)
+	has, err := HasAccess(u, repo, AccessModeAdmin)
 	if err != nil {
 		log.Error(3, "HasAccess: %v", err)
 	}
@@ -508,7 +508,7 @@ func (u *User) IsAdminOfRepo(repo *Repository) bool {
 
 // IsWriterOfRepo returns true if user has write access to given repository.
 func (u *User) IsWriterOfRepo(repo *Repository) bool {
-	has, err := HasAccess(u.ID, repo, AccessModeWrite)
+	has, err := HasAccess(u, repo, AccessModeWrite)
 	if err != nil {
 		log.Error(3, "HasAccess: %v", err)
 	}
@@ -1172,13 +1172,18 @@ func GetUserByID(id int64) (*User, error) {
 
 // GetUserIfHasWriteAccess returns the user with write access of repository by given ID.
 func GetUserIfHasWriteAccess(repo *Repository, userID int64) (*User, error) {
-	has, err := HasAccess(userID, repo, AccessModeWrite)
+	user, err := GetUserByID(userID)
+	if err != nil {
+		return nil, ErrUserNotExist{userID, "", 0}
+	}
+
+	has, err := HasAccess(user, repo, AccessModeWrite)
 	if err != nil {
 		return nil, err
 	} else if !has {
 		return nil, ErrUserNotExist{userID, "", 0}
 	}
-	return GetUserByID(userID)
+	return user, nil
 }
 
 // GetUserByName returns user by given name.
@@ -1219,16 +1224,21 @@ func getUserEmailsByNames(e Engine, names []string) []string {
 	return mails
 }
 
-// GetUsersByIDs returns all resolved users from a list of Ids.
-func GetUsersByIDs(ids []int64) ([]*User, error) {
+// getUsersByIDs returns all resolved users from a list of Ids.
+func getUsersByIDs(e Engine, ids []int64) ([]*User, error) {
 	ous := make([]*User, 0, len(ids))
 	if len(ids) == 0 {
 		return ous, nil
 	}
-	err := x.In("id", ids).
+	err := e.In("id", ids).
 		Asc("name").
 		Find(&ous)
 	return ous, err
+}
+
+// GetUsersByIDs returns all resolved users from a list of Ids.
+func GetUsersByIDs(ids []int64) ([]*User, error) {
+	return getUsersByIDs(x, ids)
 }
 
 // GetUserIDsByNames returns a slice of ids corresponds to names.

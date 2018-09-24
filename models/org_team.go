@@ -164,24 +164,24 @@ func (t *Team) removeRepository(e Engine, repo *Repository, recalculate bool) (e
 		}
 	}
 
-	teamUsers, err := getTeamUsersByTeamID(e, t.ID)
+	teamMembers, err := getTeamMembers(e, t.ID)
 	if err != nil {
-		return fmt.Errorf("getTeamUsersByTeamID: %v", err)
+		return fmt.Errorf("getTeamMembers: %v", err)
 	}
-	for _, teamUser := range teamUsers {
-		has, err := hasAccess(e, teamUser.UID, repo, AccessModeRead)
+	for _, member := range teamMembers {
+		has, err := hasAccess(e, member, repo, AccessModeRead)
 		if err != nil {
 			return err
 		} else if has {
 			continue
 		}
 
-		if err = watchRepo(e, teamUser.UID, repo.ID, false); err != nil {
+		if err = watchRepo(e, member.ID, repo.ID, false); err != nil {
 			return err
 		}
 
 		// Remove all IssueWatches a user has subscribed to in the repositories
-		if err := removeIssueWatchersByRepoID(e, teamUser.UID, repo.ID); err != nil {
+		if err := removeIssueWatchersByRepoID(e, member.ID, repo.ID); err != nil {
 			return err
 		}
 	}
@@ -408,7 +408,7 @@ func DeleteTeam(t *Team) error {
 
 		// Remove watches from all users and now unaccessible repos
 		for _, user := range t.Members {
-			has, err := hasAccess(sess, user.ID, repo, AccessModeRead)
+			has, err := hasAccess(sess, user, repo, AccessModeRead)
 			if err != nil {
 				return err
 			} else if has {
@@ -609,6 +609,8 @@ func removeTeamMember(e *xorm.Session, team *Team, userID int64) error {
 		return err
 	}
 
+	user, err := getUserByID(e, userID)
+
 	// Delete access to team repositories.
 	for _, repo := range team.Repos {
 		if err := repo.recalculateTeamAccesses(e, 0); err != nil {
@@ -616,7 +618,7 @@ func removeTeamMember(e *xorm.Session, team *Team, userID int64) error {
 		}
 
 		// Remove watches from now unaccessible
-		has, err := hasAccess(e, userID, repo, AccessModeRead)
+		has, err := hasAccess(e, user, repo, AccessModeRead)
 		if err != nil {
 			return err
 		} else if has {

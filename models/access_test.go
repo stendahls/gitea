@@ -29,19 +29,19 @@ func TestAccessLevel(t *testing.T) {
 	repo2 := AssertExistsAndLoadBean(t, &Repository{ID: 3}).(*Repository)
 	assert.True(t, repo2.IsPrivate)
 
-	level, err := AccessLevel(user1.ID, repo1)
+	level, err := AccessLevel(user1, repo1)
 	assert.NoError(t, err)
 	assert.Equal(t, AccessModeOwner, level)
 
-	level, err = AccessLevel(user1.ID, repo2)
+	level, err = AccessLevel(user1, repo2)
 	assert.NoError(t, err)
 	assert.Equal(t, AccessModeWrite, level)
 
-	level, err = AccessLevel(user2.ID, repo1)
+	level, err = AccessLevel(user2, repo1)
 	assert.NoError(t, err)
 	assert.Equal(t, AccessModeRead, level)
 
-	level, err = AccessLevel(user2.ID, repo2)
+	level, err = AccessLevel(user2, repo2)
 	assert.NoError(t, err)
 	assert.Equal(t, AccessModeNone, level)
 }
@@ -59,19 +59,19 @@ func TestHasAccess(t *testing.T) {
 	assert.True(t, repo2.IsPrivate)
 
 	for _, accessMode := range accessModes {
-		has, err := HasAccess(user1.ID, repo1, accessMode)
+		has, err := HasAccess(user1, repo1, accessMode)
 		assert.NoError(t, err)
 		assert.True(t, has)
 
-		has, err = HasAccess(user1.ID, repo2, accessMode)
+		has, err = HasAccess(user1, repo2, accessMode)
 		assert.NoError(t, err)
 		assert.Equal(t, accessMode <= AccessModeWrite, has)
 
-		has, err = HasAccess(user2.ID, repo1, accessMode)
+		has, err = HasAccess(user2, repo1, accessMode)
 		assert.NoError(t, err)
 		assert.Equal(t, accessMode <= AccessModeRead, has)
 
-		has, err = HasAccess(user2.ID, repo2, accessMode)
+		has, err = HasAccess(user2, repo2, accessMode)
 		assert.NoError(t, err)
 		assert.Equal(t, accessMode <= AccessModeNone, has)
 	}

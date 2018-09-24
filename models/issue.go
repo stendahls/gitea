@@ -385,7 +385,7 @@ func (issue *Issue) sendLabelUpdatedWebhook(doer *User) {
 		return
 	}
 
-	mode, _ := AccessLevel(issue.Poster.ID, issue.Repo)
+	mode, _ := AccessLevel(issue.Poster, issue.Repo)
 	if issue.IsPull {
 		if err = issue.loadPullRequest(x); err != nil {
 			log.Error(4, "loadPullRequest: %v", err)
@@ -468,7 +468,7 @@ func (issue *Issue) RemoveLabel(doer *User, label *Label) error {
 		return err
 	}
 
-	if has, err := HasAccess(doer.ID, issue.Repo, AccessModeWrite); err != nil {
+	if has, err := HasAccess(doer, issue.Repo, AccessModeWrite); err != nil {
 		return err
 	} else if !has {
 		return ErrLabelNotExist{}
@@ -511,7 +511,7 @@ func (issue *Issue) ClearLabels(doer *User) (err error) {
 		return err
 	}
 
-	if has, err := hasAccess(sess, doer.ID, issue.Repo, AccessModeWrite); err != nil {
+	if has, err := hasAccess(sess, doer, issue.Repo, AccessModeWrite); err != nil {
 		return err
 	} else if !has {
 		return ErrLabelNotExist{}
@@ -529,7 +529,7 @@ func (issue *Issue) ClearLabels(doer *User) (err error) {
 		return fmt.Errorf("loadPoster: %v", err)
 	}
 
-	mode, _ := AccessLevel(issue.Poster.ID, issue.Repo)
+	mode, _ := AccessLevel(issue.Poster, issue.Repo)
 	if issue.IsPull {
 		err = issue.PullRequest.LoadIssue()
 		if err != nil {
@@ -723,7 +723,7 @@ func (issue *Issue) ChangeStatus(doer *User, repo *Repository, isClosed bool) (e
 	}
 	sess.Close()
 
-	mode, _ := AccessLevel(issue.Poster.ID, issue.Repo)
+	mode, _ := AccessLevel(issue.Poster, issue.Repo)
 	if issue.IsPull {
 		// Merge pull request calls issue.changeStatus so we need to handle separately.
 		issue.PullRequest.Issue = issue
@@ -785,7 +785,7 @@ func (issue *Issue) ChangeTitle(doer *User, title string) (err error) {
 		return err
 	}
 
-	mode, _ := AccessLevel(issue.Poster.ID, issue.Repo)
+	mode, _ := AccessLevel(issue.Poster, issue.Repo)
 	if issue.IsPull {
 		issue.PullRequest.Issue = issue
 		err = PrepareWebhooks(issue.Repo, HookEventPullRequest, &api.PullRequestPayload{
@@ -851,7 +851,7 @@ func (issue *Issue) ChangeContent(doer *User, content string) (err error) {
 		return fmt.Errorf("UpdateIssueCols: %v", err)
 	}
 
-	mode, _ := AccessLevel(issue.Poster.ID, issue.Repo)
+	mode, _ := AccessLevel(issue.Poster, issue.Repo)
 	if issue.IsPull {
 		issue.PullRequest.Issue = issue
 		err = PrepareWebhooks(issue.Repo, HookEventPullRequest, &api.PullRequestPayload{
@@ -945,13 +945,17 @@ func newIssue(e *xorm.Session, doer *User, opts NewIssueOptions) (err error) {
 
 	// Check for and validate assignees
 	if len(opts.AssigneeIDs) > 0 {
-		for _, assigneeID := range opts.AssigneeIDs {
-			valid, err := hasAccess(e, assigneeID, opts.Repo, AccessModeWrite)
+		assignees, err := getUsersByIDs(e, opts.AssigneeIDs)
+		if err != nil {
+			return fmt.Errorf("getUsersByIDs: %v", err)
+		}
+		for _, assignee := range assignees {
+			valid, err := hasAccess(e, assignee, opts.Repo, AccessModeWrite)
 			if err != nil {
-				return fmt.Errorf("hasAccess [user_id: %d, repo_id: %d]: %v", assigneeID, opts.Repo.ID, err)
+				return fmt.Errorf("hasAccess [user_id: %d, repo_id: %d]: %v", assignee.ID, opts.Repo.ID, err)
 			}
 			if !valid {
-				return ErrUserDoesNotHaveAccessToRepo{UserID: assigneeID, RepoName: opts.Repo.Name}
+				return ErrUserDoesNotHaveAccessToRepo{UserID: assignee.ID, RepoName: opts.Repo.Name}
 			}
 		}
 	}
@@ -1071,7 +1075,7 @@ func NewIssue(repo *Repository, issue *Issue, labelIDs []int64, assigneeIDs []in
 		log.Error(4, "MailParticipants: %v", err)
 	}
 
-	mode, _ := AccessLevel(issue.Poster.ID, issue.Repo)
+	mode, _ := AccessLevel(issue.Poster, issue.Repo)
 	if err = PrepareWebhooks(repo, HookEventIssues, &api.IssuePayload{
 		Action:     api.HookIssueOpened,
 		Index:      issue.Index,

@@ -673,7 +673,7 @@ func (repo *Repository) ComposeCompareURL(oldCommitID, newCommitID string) strin
 
 // HasAccess returns true when user has access to this repository
 func (repo *Repository) HasAccess(u *User) bool {
-	has, _ := HasAccess(u.ID, repo, AccessModeRead)
+	has, _ := HasAccess(u, repo, AccessModeRead)
 	return has
 }
 
@@ -2486,8 +2486,8 @@ func ForkRepository(doer, u *User, oldRepo *Repository, name, desc string) (_ *R
 		return nil, err
 	}
 
-	oldMode, _ := AccessLevel(doer.ID, oldRepo)
-	mode, _ := AccessLevel(doer.ID, repo)
+	oldMode, _ := AccessLevel(doer, oldRepo)
+	mode, _ := AccessLevel(doer, repo)
 
 	if err = PrepareWebhooks(oldRepo, HookEventFork, &api.ForkPayload{
 		Forkee: oldRepo.APIFormat(oldMode),
