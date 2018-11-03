@@ -239,9 +239,9 @@ func runServ(c *cli.Context) error {
 			mode, err := models.AccessLevel(user, repo)
 			if err != nil {
 				fail("Internal error", "Failed to check access: %v", err)
-			} else if *mode < requestedMode {
+			} else if mode < requestedMode {
 				clientMessage := accessDenied
-				if *mode >= models.AccessModeRead {
+				if mode >= models.AccessModeRead {
 					clientMessage = "You do not have sufficient authorization for this action"
 				}
 				fail(clientMessage,
