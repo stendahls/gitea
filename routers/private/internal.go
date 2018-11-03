@@ -49,7 +49,14 @@ func AccessLevel(ctx *macaron.Context) {
 		})
 		return
 	}
-	al, err := models.AccessLevel(userID, repo)
+	user, err := models.GetUserByID(userID)
+	if err != nil {
+		ctx.JSON(500, map[string]interface{}{
+			"err": err.Error(),
+		})
+		return
+	}
+	al, err := models.AccessLevel(user, repo)
 	if err != nil {
 		ctx.JSON(500, map[string]interface{}{
 			"err": err.Error(),
