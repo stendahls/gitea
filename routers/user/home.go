@@ -138,6 +138,7 @@ func Dashboard(ctx *context.Context) {
 
 	retrieveFeeds(ctx, models.GetFeedsOptions{
 		RequestedUser:   ctxUser,
+		Actor:           ctx.User,
 		IncludePrivate:  true,
 		OnlyPerformedBy: false,
 		IncludeDeleted:  false,
@@ -499,7 +500,9 @@ func showOrgProfile(ctx *context.Context) {
 		count int64
 		err   error
 	)
+<<<<<<< HEAD
 	repos, count, err = models.SearchRepository(&models.SearchRepoOptions{
+		Actor:              ctx.User,
 		Keyword:            keyword,
 		OwnerID:            org.ID,
 		OrderBy:            orderBy,

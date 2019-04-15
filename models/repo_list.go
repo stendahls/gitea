@@ -111,7 +111,7 @@ func (repos MirrorRepositoryList) LoadAttributes() error {
 
 // SearchRepoOptions holds the search options
 type SearchRepoOptions struct {
-	UserID      int64
+	Actor      *User // The user performing the search
 	UserIsAdmin bool
 	Keyword     string
 	OwnerID     int64
@@ -283,6 +283,10 @@ func SearchRepository(opts *SearchRepoOptions) (RepositoryList, int64, error) {
 		cond = cond.And(builder.Eq{"is_mirror": opts.Mirror == util.OptionalBoolTrue})
 	}
 
+	if opts.Actor != nil {
+		cond = cond.And(AccessibleRepoIDsCond(opts.Actor))
+	}
+
 	if len(opts.OrderBy) == 0 {
 		opts.OrderBy = SearchOrderByAlphabetically
 	}
@@ -323,25 +327,39 @@ func SearchRepositoryByName(opts *SearchRepoOptions) (RepositoryList, int64, err
 	return SearchRepository(opts)
 }
 
-// FindUserAccessibleRepoIDs find all accessible repositories' ID by user's id
-func FindUserAccessibleRepoIDs(userID int64) ([]int64, error) {
-	var accessCond builder.Cond = builder.Eq{"is_private": false}
+// AccessibleRepoIDsCond limits repository rows to what a user can see
+func AccessibleRepoIDsCond(user *User) builder.Cond {
+	var cond = builder.NewCond()
 
-	if userID > 0 {
-		accessCond = accessCond.Or(
-			builder.Eq{"owner_id": userID},
+	if user == nil || !user.IsRestricted {
+		cond = cond.And(builder.Eq{"is_private": false})
+	}
+
+	if user != nil {
+		cond = cond.Or(
+			builder.Eq{"owner_id": user.ID},
 			builder.And(
-				builder.Expr("id IN (SELECT repo_id FROM `access` WHERE access.user_id = ?)", userID),
-				builder.Neq{"owner_id": userID},
+				builder.In("id", builder.Select("repo_id").From("access").Where(builder.Eq{"user_id": user.ID})),
+				builder.Neq{"owner_id": user.ID},
 			),
 		)
 	}
 
+	return cond
+}
+
+// AccessibleRepoIDsQuery queries accessible repository ids. Usable as a subquery wherever repo ids need to be filtered.
+func (user *User) AccessibleRepoIDsQuery() *builder.Builder {
+	return builder.Select("id").From("repository").Where(AccessibleRepoIDsCond(user))
+}
+
+// FindUserAccessibleRepoIDs find all accessible repositories' ID by user's id
+func FindUserAccessibleRepoIDs(user *User) ([]int64, error) {
 	repoIDs := make([]int64, 0, 10)
 	if err := x.
 		Table("repository").
 		Cols("id").
-		Where(accessCond).
+		Where(AccessibleRepoIDsCond(user)).
 		Find(&repoIDs); err != nil {
 		return nil, fmt.Errorf("FindUserAccesibleRepoIDs: %v", err)
 	}

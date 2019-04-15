@@ -107,6 +107,7 @@ func Search(ctx *context.APIContext) {
 	//   "422":
 	//     "$ref": "#/responses/validationError"
 	opts := &models.SearchRepoOptions{
+		Actor:              ctx.User,
 		Keyword:            strings.Trim(ctx.Query("q"), " "),
 		OwnerID:            ctx.QueryInt64("uid"),
 		Page:               ctx.QueryInt("page"),
