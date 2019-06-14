@@ -500,7 +500,6 @@ func showOrgProfile(ctx *context.Context) {
 		count int64
 		err   error
 	)
-<<<<<<< HEAD
 	repos, count, err = models.SearchRepository(&models.SearchRepoOptions{
 		Actor:              ctx.User,
 		Keyword:            keyword,
@@ -508,7 +507,6 @@ func showOrgProfile(ctx *context.Context) {
 		OrderBy:            orderBy,
 		Private:            ctx.IsSigned,
 		UserIsAdmin:        ctx.IsUserSiteAdmin(),
-		UserID:             ctx.Data["SignedUserID"].(int64),
 		Page:               page,
 		IsProfile:          true,
 		PageSize:           setting.UI.User.RepoPagingNum,

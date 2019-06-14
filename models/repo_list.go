@@ -174,7 +174,7 @@ func SearchRepository(opts *SearchRepoOptions) (RepositoryList, int64, error) {
 	var cond = builder.NewCond()
 
 	if opts.Private {
-		if !opts.UserIsAdmin && opts.UserID != 0 && opts.UserID != opts.OwnerID {
+		if opts.Actor != nil && !opts.Actor.IsAdmin && opts.Actor.ID != opts.OwnerID {
 			// OK we're in the context of a User
 			// We should be Either
 			cond = cond.And(builder.Or(
@@ -191,12 +191,12 @@ func SearchRepository(opts *SearchRepoOptions) (RepositoryList, int64, error) {
 				builder.In("id", builder.Select("repo_id").
 					From("`access`").
 					Where(builder.And(
-						builder.Eq{"user_id": opts.UserID},
+						builder.Eq{"user_id": opts.Actor.ID},
 						builder.Gt{"mode": int(AccessModeNone)}))),
 				// 3. Be able to see all repositories that we are in a team
 				builder.In("id", builder.Select("`team_repo`.repo_id").
 					From("team_repo").
-					Where(builder.Eq{"`team_user`.uid": opts.UserID}).
+					Where(builder.Eq{"`team_user`.uid": opts.Actor.ID}).
 					Join("INNER", "team_user", "`team_user`.team_id = `team_repo`.team_id"))))
 		}
 	} else {
