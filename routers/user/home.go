@@ -506,7 +506,6 @@ func showOrgProfile(ctx *context.Context) {
 		OwnerID:            org.ID,
 		OrderBy:            orderBy,
 		Private:            ctx.IsSigned,
-		UserIsAdmin:        ctx.IsUserSiteAdmin(),
 		Page:               page,
 		IsProfile:          true,
 		PageSize:           setting.UI.User.RepoPagingNum,
