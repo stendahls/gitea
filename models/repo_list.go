@@ -282,7 +282,7 @@ func SearchRepository(opts *SearchRepoOptions) (RepositoryList, int64, error) {
 		cond = cond.And(builder.Eq{"is_mirror": opts.Mirror == util.OptionalBoolTrue})
 	}
 
-	if opts.Actor != nil {
+	if opts.Actor != nil && opts.Actor.IsRestricted {
 		cond = cond.And(AccessibleRepoIDsCond(opts.Actor))
 	}
 
