@@ -106,10 +106,18 @@ func init() {
 		}
 	}
 
-	// Set git some configurations.
-	if _, stderr, err := process.GetManager().Exec("git.Init(git config --global core.quotepath false)",
-		GitExecutable, "config", "--global", "core.quotepath", "false"); err != nil {
-		panic(fmt.Sprintf("Failed to execute 'git config --global core.quotepath false': %s", stderr))
+	// Set some git configuration
+	for configKey, expectedValue := range map[string]string{"core.quotepath": "false"} {
+		if stdout, stderr, err := process.GetManager().Exec("git.Init(get setting)", GitExecutable, "config", "--global", "--get", configKey); err != nil || strings.TrimSpace(stdout) != expectedValue {
+			// ExitError indicates this config is not set
+			if _, ok := err.(*exec.ExitError); ok || strings.TrimSpace(stdout) != expectedValue {
+				if _, stderr, gerr := process.GetManager().Exec("git.Init(set "+configKey+")", "git", "config", "--global", configKey, expectedValue); gerr != nil {
+					panic(fmt.Sprintf("Failed to set git %s(%s): %s", configKey, gerr, stderr))
+				}
+			} else {
+				panic(fmt.Sprintf("Failed to get git %s(%s): %s", configKey, err, stderr))
+			}
+		}
 	}
 }
 
