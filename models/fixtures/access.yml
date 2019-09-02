@@ -78,12 +78,12 @@
 
 -
   id: 14
-  user_id: 24
+  user_id: 26
   repo_id: 4
   mode: 2 # write (collaborator)
 
 -
   id: 15
-  user_id: 24
+  user_id: 26
   repo_id: 24
   mode: 1 # read
